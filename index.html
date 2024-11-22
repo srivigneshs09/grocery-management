@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html ng-app="groceryApp">
+<head>
+  <title>Grocery Management</title>
+  <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular-animate.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+
+    form {
+      margin-bottom: 20px;
+    }
+
+    input, select, button {
+      margin: 5px;
+      padding: 8px;
+    }
+
+    ul {
+      list-style-type: none;
+      padding: 0;
+    }
+
+    .grocery-item {
+      padding: 10px;
+      border: 1px solid #ddd;
+      margin: 5px 0;
+      transition: all 0.3s ease-in-out;
+    }
+
+    .grocery-item.ng-enter {
+      opacity: 0;
+      transform: scale(0.9);
+    }
+    .grocery-item.ng-enter-active {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .grocery-item.ng-leave {
+      opacity: 1;
+      transform: scale(1);
+    }
+    .grocery-item.ng-leave-active {
+      opacity: 0;
+      transform: scale(0.9);
+    }
+
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal-content {
+      background: white;
+      padding: 20px;
+      border-radius: 5px;
+      width: 300px;
+    }
+  </style>
+</head>
+<body ng-controller="GroceryController">
+
+  <h1>Grocery Management</h1>
+
+  <!-- Add Item Form -->
+  <form ng-submit="addItem()">
+    <input type="text" ng-model="newItem.name" placeholder="Item Name" required>
+    <input type="number" ng-model="newItem.quantity" placeholder="Quantity" required>
+    <input type="text" ng-model="newItem.category" placeholder="Category" required>
+    <button type="submit">Add Item</button>
+  </form>
+
+  <!-- Filters -->
+  <div>
+    <label>Search:</label>
+    <input type="text" ng-model="searchText">
+    <label>Sort By:</label>
+    <select ng-model="sortKey">
+      <option value="name">Name</option>
+      <option value="quantity">Quantity</option>
+      <option value="category">Category</option>
+    </select>
+    <label>Order:</label>
+    <button ng-click="reverseSort = !reverseSort">
+      {{ reverseSort ? 'Descending' : 'Ascending' }}
+    </button>
+  </div>
+
+  <!-- Grocery List -->
+  <ul>
+    <li ng-repeat="item in items | filter:searchText | orderBy:sortKey:reverseSort" class="grocery-item">
+      <span>{{ item.name }} - {{ item.quantity }} ({{ item.category }})</span>
+      <button ng-click="editItem(item)">Edit</button>
+      <button ng-click="deleteItem(item)">Delete</button>
+    </li>
+  </ul>
+
+  <!-- Edit Item Modal -->
+  <div class="modal" ng-show="editingItem">
+    <div class="modal-content">
+      <h2>Edit Item</h2>
+      <form ng-submit="updateItem()">
+        <input type="text" ng-model="editingItem.name" placeholder="Item Name" required>
+        <input type="number" ng-model="editingItem.quantity" placeholder="Quantity" required>
+        <input type="text" ng-model="editingItem.category" placeholder="Category" required>
+        <button type="submit">Save</button>
+        <button type="button" ng-click="cancelEdit()">Cancel</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    angular.module('groceryApp', ['ngAnimate'])
+      .controller('GroceryController', ['$scope', function ($scope) {
+        $scope.items = [
+          { name: 'Apple', quantity: 10, category: 'Fruits' },
+          { name: 'Bread', quantity: 5, category: 'Bakery' },
+          { name: 'Milk', quantity: 2, category: 'Dairy' },
+        ];
+
+        $scope.newItem = {};
+        $scope.editingItem = null;
+        $scope.sortKey = 'name';
+        $scope.reverseSort = false;
+
+        // Add Item
+        $scope.addItem = function () {
+          if ($scope.newItem.name && $scope.newItem.quantity && $scope.newItem.category) {
+            $scope.items.push(angular.copy($scope.newItem));
+            $scope.newItem = {};
+          }
+        };
+
+        // Edit Item
+        $scope.editItem = function (item) {
+          $scope.editingItem = angular.copy(item);
+          $scope.originalItem = item;
+        };
+
+        // Update Item
+        $scope.updateItem = function () {
+          Object.assign($scope.originalItem, $scope.editingItem);
+          $scope.editingItem = null;
+        };
+
+        // Cancel Edit
+        $scope.cancelEdit = function () {
+          $scope.editingItem = null;
+        };
+
+        // Delete Item
+        $scope.deleteItem = function (item) {
+          const index = $scope.items.indexOf(item);
+          if (index !== -1) $scope.items.splice(index, 1);
+        };
+      }]);
+  </script>
+
+</body>
+</html>
